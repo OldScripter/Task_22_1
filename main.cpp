@@ -1,5 +1,9 @@
 #include <iostream>
 #include <map>
+#include <vector>
+
+std::map<std::string, std::string> phoneBook;
+std::map<std::string, std::vector<std::string>> ownersBook;
 
 /**
  * @function Get the input from keyboard.
@@ -14,6 +18,82 @@ std::string getInput()
     return buffer;
 }
 
+/**
+ * @function Register new number and its owner in book, or set new owner for the number.
+ * @requires [global] phoneBook map and [global] ownersBook map
+ * @param [in] number string to be registered.
+ * @param [in] name string to be registered.
+ */
+void addPhone(std::string& number, std::string& name)
+{
+    //Add to phone book:
+    std::map<std::string, std::string>::iterator phoneIt = phoneBook.find(number);
+    if (phoneIt != phoneBook.end())
+    {
+        std::cout << "Setting the number " << number << " to the owner " << name << ".\n";
+        phoneIt->second = name;
+    }
+    else
+    {
+        std::cout << "Adding the number " << number << " for the owner " << name << ".\n";
+        phoneBook.insert(std::make_pair(number, name));
+    }
+
+    //Add to owners book:
+    std::map<std::string, std::vector<std::string>>::iterator ownerIt = ownersBook.find(name);
+    if (ownerIt != ownersBook.end())
+    {
+        ownerIt->second.push_back(number);
+    }
+    else
+    {
+        std::vector<std::string> numbers = {number};
+        ownersBook.insert(std::make_pair(name, numbers));
+    }
+}
+
+/**
+ * @function Get the owner of phone number.
+ * @requires [global] phoneBook map
+ * @param [in] number owner for which is looking for.
+ */
+void getOwner(std::string& number)
+{
+    std::map<std::string, std::string>::iterator it = phoneBook.find(number);
+    if (it != phoneBook.end())
+    {
+        std::cout << "The owner of number " << number << " is " << it->second << ".\n";
+    }
+    else
+    {
+        std::cout << "The owner of number " << number << " is not found.\n";
+    }
+}
+
+/**
+ * @function Return all numbers of the owner.
+ * @requires [global] ownersBook map
+ * @param [in] name of the owner for whom numbers are looking for.
+ */
+void getNumbers(std::string& name)
+{
+    std::map<std::string, std::vector<std::string>>::iterator it = ownersBook.find(name);
+    if (it != ownersBook.end())
+    {
+        std::cout << "For " << name << " following numbers are registered:\n";
+        for (std::string number : it->second)
+        {
+            std::cout << number << " ";
+        }
+        std::cout << '\n';
+    }
+    else
+    {
+        std::cout << "Person " << name << " is not found.\n";
+    }
+
+}
+
 int main()
 {
     std::map<std::string, std::string> phoneNumbers;
@@ -24,7 +104,7 @@ int main()
         {
             break;
         }
-        else if (buffer.length() == 0 || (buffer.length() != 0 && buffer[0] == ' '))
+        else if (buffer.length() == 0 || buffer[0] == ' ')
         {
             std::cerr << "Bad input! Try again.\n";
             continue;
@@ -45,49 +125,18 @@ int main()
         }
         if (firstPart[0] >= '0' && firstPart[0] <= '9')
         {
-            std::map<std::string, std::string>::iterator it = phoneNumbers.find(firstPart);
             if (secondPart != "none")
             {
-                if (it != phoneNumbers.end())
-                {
-                    std::cout << "Setting the number " << firstPart << " to the owner " << secondPart << ".\n";
-                    it->second = secondPart;
-                }
-                else
-                {
-                    std::cout << "Adding the number " << firstPart << " for the owner " << secondPart << ".\n";
-                    phoneNumbers.insert(std::make_pair(firstPart, secondPart));
-                }
+                addPhone(firstPart, secondPart);
             }
             else
             {
-                std::cout << "Looking for owner of '" << firstPart << "'.\n";
-                it = phoneNumbers.find(firstPart);
-                if (it != phoneNumbers.end())
-                {
-                    std::cout << "The owner is: " << it->second << "\n";
-                }
-                else
-                {
-                    std::cout << "Owner not found.\n";
-                }
+                getOwner(firstPart);
             }
         }
         else
         {
-            std::cout << "Looking for numbers for owner '" << firstPart << "'.\n";
-            int counter = 0;
-            for (std::map<std::string, std::string>::iterator it = phoneNumbers.begin();
-                 it != phoneNumbers.end(); ++it)
-            {
-                if (it->second == firstPart)
-                {
-                    std::cout << it->first << " ";
-                    ++counter;
-                }
-            }
-            std::cout << "\n";
-            if (counter == 0) std::cout << "No numbers found.\n";
+            getNumbers(firstPart);
         }
     }
     while(true);
